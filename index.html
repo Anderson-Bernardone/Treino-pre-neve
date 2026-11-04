@@ -13,19 +13,19 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;800&family=Barlow:wght@400;500;600&display=swap">
 <style>
-/* Layout: cabeçalho compacto, abas A/B/C, timer fixo no topo do conteúdo, cards de exercício em coluna. Cores inspiradas nas pistas de esqui. */
+/* Layout: cabeçalho compacto, abas A/B/C, timer por exercício, cards em coluna. Cores das pistas de esqui. */
 :root{
   --bg:#eef2f5; --surface:#ffffff; --fg:#14202b; --muted:#5b6b78; --line:#d5dde3;
-  --accent:#1f5fbf; --accent-soft:#dce7f7; --work:#c8322b; --rest:#2f8a4f; --black:#14202b;
+  --accent:#1f5fbf; --accent-soft:#dce7f7; --work:#c8322b; --rest:#2f8a4f;
   --display:"Barlow Condensed","Arial Narrow",sans-serif; --body:"Barlow",system-ui,sans-serif;
   color-scheme:light;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#0f161d; --surface:#18222c; --fg:#e7eef3; --muted:#93a3b0; --line:#2a3743;
-  --accent:#6b9fe8; --accent-soft:#1d2d44; --work:#ef6a5f; --rest:#5cc27f; --black:#e7eef3; color-scheme:dark}}
+  --accent:#6b9fe8; --accent-soft:#1d2d44; --work:#ef6a5f; --rest:#5cc27f; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0f161d; --surface:#18222c; --fg:#e7eef3; --muted:#93a3b0; --line:#2a3743;
-  --accent:#6b9fe8; --accent-soft:#1d2d44; --work:#ef6a5f; --rest:#5cc27f; --black:#e7eef3; color-scheme:dark}
+  --accent:#6b9fe8; --accent-soft:#1d2d44; --work:#ef6a5f; --rest:#5cc27f; color-scheme:dark}
 body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.5}
 .wrap{max-width:720px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:18px}
 h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.1}
@@ -38,56 +38,68 @@ h1{font-size:2.3rem;font-weight:800;letter-spacing:.01em}
 .tab{font:600 1rem var(--body);padding:10px 6px;border:1.5px solid var(--line);background:var(--surface);color:var(--fg);border-radius:10px;cursor:pointer;text-align:center}
 .tab small{display:block;font-weight:500;color:var(--muted);font-size:.78rem}
 .tab[aria-selected="true"]{border-color:var(--accent);background:var(--accent-soft)}
-.tab:focus-visible,button:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
-.timer{background:var(--surface);border:1.5px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.tab:focus-visible,button:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.timer{background:var(--surface);border:1.5px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px;position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
 .trow{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 .phase{font:600 .78rem var(--body);text-transform:uppercase;letter-spacing:.12em;color:var(--muted)}
 .phase.work{color:var(--work)} .phase.rest{color:var(--rest)}
-.clock{font:800 4.2rem/1 var(--display);font-variant-numeric:tabular-nums}
+.clockrow{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.clock{font:800 4rem/1 var(--display);font-variant-numeric:tabular-nums}
+.step{font:600 .85rem var(--body);color:var(--muted);font-variant-numeric:tabular-nums}
 .now{font:600 1.35rem var(--display)}
 .next{color:var(--muted);font-size:.9rem}
+.bars{display:flex;flex-direction:column;gap:6px}
 .bar{height:8px;background:var(--line);border-radius:4px;overflow:hidden}
+.bar.thin{height:4px}
 .bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .3s linear}
-.btns{display:flex;gap:8px;flex-wrap:wrap}
-button.b{font:600 1rem var(--body);padding:10px 16px;border-radius:10px;border:none;cursor:pointer;background:var(--accent);color:#fff}
+.bar.ex i{background:var(--work)} .bar.ex.rest i{background:var(--rest)}
+.btns{display:grid;grid-template-columns:auto 1fr auto;gap:8px}
+.btns2{display:flex;gap:8px;flex-wrap:wrap;justify-content:space-between;align-items:center}
+button.b{font:600 1rem var(--body);padding:12px 14px;border-radius:10px;border:none;cursor:pointer;background:var(--accent);color:#fff}
 button.b.ghost{background:transparent;color:var(--fg);border:1.5px solid var(--line)}
+button.b.small{font-size:.85rem;padding:8px 12px}
+button.b.warn{border-color:var(--work);color:var(--work)}
 select{font:500 .95rem var(--body);padding:8px;border-radius:8px;border:1.5px solid var(--line);background:var(--surface);color:var(--fg)}
 label.sel{display:flex;gap:8px;align-items:center;font-size:.9rem;color:var(--muted)}
 .sec-h{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-top:6px}
 .sec-h h2{font-size:1.5rem}
 .sec-h span{color:var(--muted);font-size:.85rem}
-.card{background:var(--surface);border:1.5px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.list{display:flex;flex-direction:column;gap:12px}
+.card{background:var(--surface);border:1.5px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px;scroll-margin-top:320px}
 .card.live{border-color:var(--work)}
 .ch{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
 .ch h3{font-size:1.35rem;font-weight:600}
 .time{font:600 .85rem var(--body);background:var(--accent-soft);color:var(--accent);padding:3px 8px;border-radius:6px;white-space:nowrap}
+.tags{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .piste{display:inline-flex;align-items:center;gap:6px;font-size:.8rem;color:var(--muted)}
 .piste i{width:10px;height:10px;border-radius:2px;display:inline-block}
+.knee{font:600 .75rem var(--body);color:var(--rest);border:1px solid var(--rest);border-radius:5px;padding:1px 6px}
 ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:3px}
 .lbl{font:600 .72rem var(--body);text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:2px}
 .err{color:var(--work)}
 .var{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:.9rem}
 .var div{border:1px dashed var(--line);border-radius:8px;padding:8px}
-.vid{align-self:flex-start;font-weight:600;color:var(--accent);text-decoration:none;border:1.5px solid var(--accent);padding:6px 12px;border-radius:8px}
-.card>.note{margin-top:-4px}
+.foot{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.vid{font-weight:600;color:var(--accent);text-decoration:none;border:1.5px solid var(--accent);padding:6px 12px;border-radius:8px}
 .vid:hover{background:var(--accent-soft)}
 .note{font-size:.85rem;color:var(--muted)}
-@media (max-width:420px){.var{grid-template-columns:1fr}.clock{font-size:3.4rem}}
+.box{background:var(--accent-soft);border-radius:10px;padding:10px 12px;font-size:.9rem}
+@media (max-width:420px){.var{grid-template-columns:1fr}.clock{font-size:3.3rem}.card{scroll-margin-top:300px}}
 @media (prefers-reduced-motion:reduce){.bar i{transition:none}}
 </style>
 
 <div class="wrap">
   <header>
     <h1>Treino Pré-Neve</h1>
-    <p class="sub">15 min por dia até 13/dez. Fôlego, core e perna pro primeiro dia de esqui.</p>
+    <p class="sub">15 min por dia até 13/dez. Fôlego, core e perna, sem impacto no joelho.</p>
   </header>
 
   <div class="streak" id="streak" aria-label="Dias concluídos"></div>
 
   <div class="tabs" role="tablist">
-    <button class="tab" role="tab" id="tA" data-d="A">Treino A<small>Perna + fôlego</small></button>
+    <button class="tab" role="tab" id="tA" data-d="A">Treino A<small>Perna + glúteo</small></button>
     <button class="tab" role="tab" id="tB" data-d="B">Treino B<small>Core + superior</small></button>
-    <button class="tab" role="tab" id="tC" data-d="C">Treino C<small>Cardio</small></button>
+    <button class="tab" role="tab" id="tC" data-d="C">Treino C<small>Cardio leve</small></button>
   </div>
 
   <section class="timer" aria-live="polite">
@@ -98,134 +110,187 @@ ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:3px}
           <option value="45">Semanas 3-6 · 45s / 15s</option>
         </select>
       </label>
-      <span class="note" id="total"></span>
+      <label class="sel" for="auto">Ao acabar
+        <select id="auto">
+          <option value="1">segue sozinho</option>
+          <option value="0">espera eu</option>
+        </select>
+      </label>
     </div>
     <div>
       <div class="phase" id="phase">Pronto</div>
-      <div class="clock" id="clock">00:00</div>
-      <div class="now" id="now">Aperte iniciar</div>
+      <div class="clockrow"><div class="clock" id="clock">00:40</div><div class="step" id="step"></div></div>
+      <div class="now" id="now"></div>
       <div class="next" id="next"></div>
     </div>
-    <div class="bar"><i id="prog"></i></div>
+    <div class="bars">
+      <div class="bar ex" id="exbar"><i id="exprog"></i></div>
+      <div class="bar thin" title="Progresso do treino"><i id="prog"></i></div>
+    </div>
     <div class="btns">
-      <button class="b" id="go">Iniciar</button>
-      <button class="b ghost" id="skip">Pular</button>
-      <button class="b ghost" id="reset">Zerar</button>
+      <button class="b ghost" id="prev" aria-label="Exercício anterior">◀</button>
+      <button class="b" id="go">▶ Iniciar</button>
+      <button class="b ghost" id="skip" aria-label="Próximo exercício">▶▶</button>
+    </div>
+    <div class="btns2">
+      <button class="b ghost small" id="again">↺ Repetir este exercício</button>
+      <button class="b ghost small" id="reset">Recomeçar treino</button>
     </div>
   </section>
 
+  <div class="box">Tudo aqui foi escolhido para não forçar o joelho: sem salto, sem afundo e sem agachar fundo. Se o joelho incomodar, use a versão "Mais fácil" ou diminua a amplitude.</div>
+
   <div class="sec-h"><h2>Aquecimento</h2><span>2 min, sem descanso</span></div>
-  <div id="warm" style="display:flex;flex-direction:column;gap:12px"></div>
+  <div id="warm" class="list"></div>
 
   <div class="sec-h"><h2 id="dtitle">Circuito</h2><span>3 voltas</span></div>
-  <div id="list" style="display:flex;flex-direction:column;gap:12px"></div>
+  <div id="list" class="list"></div>
 
-  <p class="note">Nível de dificuldade segue a cor das pistas: verde fácil, azul médio, vermelha difícil. Cada botão abre o vídeo indicado no YouTube. Sentiu dor articular (não cansaço muscular), pare e use a versão fácil.</p>
+  <p class="note">A cor indica a dificuldade, como nas pistas de esqui: verde é fácil, azul é médio e vermelha é difícil. Cada botão abre o vídeo indicado no YouTube. Sentiu dor na articulação (diferente de cansaço muscular)? Pare e use a versão fácil.</p>
 </div>
 
 <script>
 const yt=v=>"https://www.youtube.com/watch?v="+v;
 const P={g:["#2f8a4f","Verde"],b:["#1f5fbf","Azul"],r:["#c8322b","Vermelha"]};
 const WARM=[
- {n:"Polichinelo",t:"40s",p:"g",how:["Pés juntos, braços ao lado do corpo","Salte abrindo pernas e subindo os braços","Volte e repita em ritmo constante"],err:"Aterrissar com o calcanhar travado; pise na ponta do pé",e:"Sem salto: passo lateral com braços",h:"Ritmo mais rápido",v:"S2uqQ9zHZMc",c:"Smart Fit · 2:15"},
- {n:"Rotação de quadril",t:"40s",p:"g",how:["Mãos na cintura, pés na largura do ombro","Desenhe círculos grandes com o quadril","20s para cada lado"],err:"Mexer só o tronco; o movimento é do quadril",e:"Círculos menores",h:"Adicione rotação de tronco",v:"Tj1Ql5R1jrQ",c:"Luann Brasil · 0:13"},
- {n:"Agachamento leve",t:"40s",p:"g",how:["Desça até metade, devagar","Braços à frente pra equilibrar","Suba sem travar o joelho"],err:"Descer rápido sem controle",e:"Amplitude curta",h:"Descer até a paralela",v:"s7i94Okznns",c:"Rodrigo Zago · 1:42"}
+ {n:"Polichinelo sem salto",p:"g",how:["Pés juntos, braços ao lado do corpo","Leve uma perna para o lado e suba os braços","Volte ao centro e troque de perna","Ritmo constante, sem pular"],err:"Travar o joelho esticado. Mantenha ele levemente flexionado",e:"Só os braços, com passo curto",h:"Ritmo mais rápido",v:"K8YKyoe_zo4",c:"Apptiva · polichinelo sem salto"},
+ {n:"Rotação de quadril",p:"g",how:["Mãos na cintura, pés na largura do ombro","Desenhe círculos grandes com o quadril","Metade do tempo para cada lado"],err:"Mexer só o tronco. O movimento sai do quadril",e:"Círculos menores",h:"Some uma rotação de tronco",v:"Tj1Ql5R1jrQ",c:"Luann Brasil · 0:13"},
+ {n:"Marcha no lugar",p:"g",how:["Marche no lugar subindo bem o joelho","Braços acompanham, como numa corrida","Pise suave, sem bater o pé"],err:"Inclinar o tronco para trás",e:"Joelho mais baixo",h:"Mais rápido, quase correndo",v:"SU4gKTV4ZAQ",c:"Suporte Saúde · 0:24"}
 ];
 const D={
- A:{t:"Treino A · Perna + fôlego",x:[
-  {n:"Agachamento livre",p:"b",how:["Pés na largura do ombro, pontas um pouco pra fora","Quadril vai pra trás como se fosse sentar","Desça até a coxa ficar paralela ao chão","Suba empurrando o chão com o calcanhar"],err:"Joelho caindo pra dentro e calcanhar saindo do chão",e:"Sentar e levantar de uma cadeira",h:"Pausa de 2s embaixo",v:"s7i94Okznns",c:"Rodrigo Zago · 1:42"},
-  {n:"Afundo alternado",p:"b",how:["Dê um passo largo à frente","Desça até os dois joelhos formarem 90°","Joelho de trás quase toca o chão","Volte e troque a perna"],err:"Passo curto demais, joelho da frente passa muito da ponta do pé",e:"Afundo parado, sem trocar a perna",h:"Afundo com salto trocando no ar",v:"SNUWg0De4RE",c:"Treino Correto · 0:18"},
-  {n:"Agachamento isométrico na parede",p:"r",how:["Costas apoiadas na parede","Desça até 90° no joelho, como se tivesse numa cadeira","Braços cruzados, segure a posição","Respire pelo nariz, não prenda o ar"],err:"Subir o quadril quando cansa; é aqui que treina a posição do esqui",e:"Ângulo mais aberto (joelho a 120°)",h:"Levante um pé por vez",v:"sHxPFpaB6W4",c:"Make You Fit · 0:22"},
-  {n:"Burpee sem flexão",p:"r",how:["Agache e apoie as mãos no chão","Jogue os pés pra trás até a prancha","Volte os pés pra perto das mãos","Levante e dê um pequeno salto"],err:"Quadril despencando na prancha, lombar afundada",e:"Leve um pé de cada vez pra trás, sem salto",h:"Com flexão no meio",v:"baI2kP53IKs",c:"Treinador Rafa Rui · 0:16"}
+ A:{t:"Treino A · Perna + glúteo",x:[
+  {n:"Sentar e levantar da cadeira",p:"g",how:["Fique na frente de uma cadeira firme","Leve o quadril para trás até encostar de leve no assento","Levante empurrando o chão com o calcanhar","Braços à frente para equilibrar"],err:"Joelho caindo para dentro. Ele aponta para a ponta do pé",e:"Use as mãos na coxa para ajudar",h:"Só encoste e suba, sem sentar",v:"NuJOwwDpYJQ",c:"Senta e levanta da cadeira"},
+  {n:"Ponte de glúteo",p:"g",how:["Deite de barriga para cima, joelhos dobrados, pés no chão","Pés na largura do quadril, perto do bumbum","Suba o quadril apertando o glúteo","Segure 1s no alto e desça devagar"],err:"Arquear a lombar. Quem sobe o quadril é o glúteo",e:"Amplitude menor",h:"Uma perna só, alternando a cada repetição",v:"X8kD4NISxO4",c:"Exercício ponte"},
+  {n:"Abdução de quadril deitado",p:"b",split:true,how:["Deite de lado, cabeça apoiada no braço","Perna de baixo dobrada para dar base","Suba a perna de cima esticada, sem girar o pé para cima","Metade do tempo de cada lado"],err:"Girar o quadril para trás. Fique bem de lado",e:"Amplitude menor",h:"Segure 2s no alto",v:"QHgnFP3pgNA",c:"Abdução de quadril deitado"},
+  {n:"Elevação de panturrilha",p:"g",how:["Em pé, apoie a mão numa parede","Suba na ponta dos pés o mais alto possível","Segure 1s e desça devagar","Joelho reto, mas sem travar"],err:"Descer rápido demais. A descida conta",e:"Movimento mais curto",h:"Uma perna por vez",v:"cklp_Xh5V8M",c:"Elevação de panturrilha em pé"}
  ]},
  B:{t:"Treino B · Core + superior",x:[
-  {n:"Prancha frontal",p:"b",how:["Antebraços no chão, cotovelos abaixo dos ombros","Corpo reto da cabeça ao calcanhar","Contraia abdômen e glúteo","Olhe pro chão, pescoço neutro"],err:"Quadril alto demais ou lombar afundando",e:"Joelhos no chão",h:"Toque alternado no ombro",v:"qNRqGqESAWU",c:"Leandro Twin · 1:55"},
-  {n:"Flexão de braço",p:"r",how:["Mãos um pouco além da largura do ombro","Corpo em linha reta","Desça o peito até perto do chão","Cotovelos a 45° do corpo, não abertos"],err:"Cotovelo aberto em T e quadril caído",e:"Joelhos no chão ou mãos num banco",h:"Descida lenta de 3s",v:"Azw6BZ8-wSM",c:"Projeto Calistenia · 5:55"},
-  {n:"Prancha lateral",p:"b",split:true,how:["Deite de lado, antebraço sob o ombro","Eleve o quadril até o corpo ficar reto","Segure metade do tempo e troque de lado","Mão livre na cintura"],err:"Quadril caindo ou corpo girando pra frente",e:"Joelho de baixo apoiado",h:"Eleve a perna de cima",v:"2NjO5KrlVEM",c:"Rodrigo Zago · 0:55"},
-  {n:"Mountain climber",p:"r",how:["Posição de prancha alta, mãos sob os ombros","Leve um joelho em direção ao peito","Troque rápido, como se corresse","Quadril baixo e estável"],err:"Quadril subindo e pés quase parados",e:"Ritmo lento, um joelho por vez",h:"Joelho cruzado até o cotovelo oposto",v:"yXS1a84tVSw",c:"Rodrigo Zago · 0:54"}
+  {n:"Prancha frontal",p:"b",how:["Antebraços no chão, cotovelos abaixo dos ombros","Corpo reto da cabeça ao calcanhar","Contraia abdômen e glúteo","Olhe para o chão, pescoço neutro"],err:"Quadril alto demais ou lombar afundando",e:"Joelhos no chão (com um apoio macio)",h:"Toque alternado no ombro",v:"qNRqGqESAWU",c:"Leandro Twin · 1:55"},
+  {n:"Flexão de braço",p:"r",how:["Mãos um pouco além da largura do ombro","Corpo em linha reta","Desça o peito até perto do chão","Cotovelos a 45° do corpo, não abertos"],err:"Cotovelo aberto em T e quadril caído",e:"Mãos na parede ou num banco, em pé",h:"Descida lenta de 3s",v:"Azw6BZ8-wSM",c:"Projeto Calistenia · 5:55"},
+  {n:"Prancha lateral",p:"b",split:true,how:["Deite de lado, antebraço sob o ombro","Eleve o quadril até o corpo ficar reto","Metade do tempo de cada lado","Mão livre na cintura"],err:"Quadril caindo ou corpo girando para frente",e:"Joelho de baixo apoiado",h:"Eleve a perna de cima",v:"2NjO5KrlVEM",c:"Rodrigo Zago · 0:55"},
+  {n:"Mountain climber lento",p:"b",how:["Prancha alta, mãos sob os ombros","Leve um joelho em direção ao peito, sem pressa","Volte e troque a perna","Quadril baixo e estável"],err:"Quadril subindo. Se o joelho doer, faça com as mãos num banco",e:"Mãos num banco ou sofá",h:"Mais rápido, ritmo de corrida",v:"yXS1a84tVSw",c:"Rodrigo Zago · 0:54"}
  ]},
- C:{t:"Treino C · Cardio",x:[
-  {n:"Corrida parada com joelho alto",p:"b",how:["Corra no lugar","Joelho sobe até a altura do quadril","Braços acompanham o ritmo","Pise com a ponta do pé"],err:"Joelho baixo e tronco inclinado pra trás",e:"Marcha rápida sem saltar",h:"Máxima velocidade",v:"SU4gKTV4ZAQ",c:"Suporte Saúde · 0:24"},
-  {n:"Skater (salto lateral)",p:"r",how:["Salte de lado e caia numa perna só","A outra perna cruza atrás","Absorva a queda flexionando o joelho","Salte pro outro lado"],err:"Cair com a perna esticada; é o movimento de curva no esqui",e:"Passo lateral sem salto",h:"Salto mais largo e mais rápido",v:"4bkS2J84qMA",c:"Vida Ativa · 0:23"},
-  {n:"Agachamento com salto",p:"r",how:["Agache até a metade","Exploda pra cima saltando","Caia suave com joelhos flexionados","Emende no próximo agachamento"],err:"Aterrissar duro com perna reta",e:"Agachamento rápido na ponta dos pés, sem sair do chão",h:"Agache até a paralela",v:"PAvP8GzfJj8",c:"João Martins · 3:03"},
-  {n:"Dead bug",p:"g",how:["Deitado, braços pra cima, joelhos a 90°","Lombar colada no chão","Estenda braço e perna opostos devagar","Volte e troque o lado"],err:"Lombar descolando do chão",e:"Mexa só as pernas",h:"Segure 2s com braço e perna estendidos",v:"uQfzuKBMJeE",c:"Clínica das Concussões · 1:14"}
+ C:{t:"Treino C · Cardio leve",x:[
+  {n:"Corrida parada sem impacto",p:"b",how:["Marche no lugar bem rápido","Joelho sobe até a altura do quadril","Braços acompanham forte","Pise na ponta do pé, sem bater"],err:"Bater o pé no chão. O som deve ser baixo",e:"Marcha normal",h:"Corrida leve com saltitos (só se o joelho estiver ok)",v:"SU4gKTV4ZAQ",c:"Suporte Saúde · 0:24"},
+  {n:"Passo lateral do patinador",p:"b",how:["Dê um passo largo para o lado","A outra perna cruza atrás, encostando a ponta do pé","Tronco levemente à frente, como no esqui","Troque o lado num ritmo constante"],err:"No vídeo o exercício é com salto. Aqui, faça só o passo, sem pular",e:"Passo mais curto",h:"Com salto (só se o joelho estiver ok)",v:"4bkS2J84qMA",c:"Vida Ativa · 0:23"},
+  {n:"Socos no ar",p:"g",how:["Pés afastados, joelhos levemente dobrados","Alterne socos retos para frente, rápido","Gire um pouco o tronco a cada soco","Abdômen contraído o tempo todo"],err:"Esticar o cotovelo até travar",e:"Mais devagar",h:"Some socos para cima",v:"fZLv3GCpf14",c:"Shadow boxing para iniciantes (em inglês)"},
+  {n:"Dead bug",p:"g",how:["Deitado, braços para cima, joelhos a 90°","Lombar colada no chão","Estenda braço e perna opostos devagar","Volte e troque o lado"],err:"Lombar descolando do chão",e:"Mexa só as pernas",h:"Segure 2s com braço e perna estendidos",v:"uQfzuKBMJeE",c:"Clínica das Concussões · 1:14"}
  ]}
 };
-let day="A";
-try{day=localStorage.getItem("tp-day")||"A"}catch(e){}
 const $=s=>document.querySelector(s);
+const ls={get(k,d){try{const v=localStorage.getItem(k);return v===null?d:v}catch(e){return d}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+let day=ls.get("tp-day","A");if(!D[day])day="A";
+$("#fase").value=ls.get("tp-fase","40");$("#auto").value=ls.get("tp-auto","1");
 
-function card(x,t,i){
+function card(x,t,id){
   const [c,l]=P[x.p];
-  return `<article class="card" id="ex${i}">
+  return `<article class="card" id="${id}">
    <div class="ch"><h3>${x.n}</h3><span class="time">${t}</span></div>
-   <span class="piste"><i style="background:${c}"></i>Pista ${l}</span>
+   <div class="tags"><span class="piste"><i style="background:${c}"></i>Pista ${l}</span><span class="knee">Joelho ok</span></div>
    <div><div class="lbl">Como fazer</div><ol>${x.how.map(h=>`<li>${h}</li>`).join("")}</ol></div>
-   <div><div class="lbl">Erro comum</div><div class="err">${x.err}</div></div>
+   <div><div class="lbl">Cuidado</div><div class="err">${x.err}</div></div>
    <div class="var"><div><div class="lbl">Mais fácil</div>${x.e}</div><div><div class="lbl">Mais difícil</div>${x.h}</div></div>
-   <a class="vid" href="${yt(x.v)}" target="_blank" rel="noopener">▶ Ver vídeo</a><span class="note">${x.c}</span>
+   <div class="foot"><a class="vid" href="${yt(x.v)}" target="_blank" rel="noopener">▶ Ver vídeo</a><span class="note">${x.c}</span></div>
   </article>`;
 }
 function times(){const w=+$("#fase").value;return {w,r:60-w}}
 function render(){
   document.querySelectorAll(".tab").forEach(b=>b.setAttribute("aria-selected",b.dataset.d===day));
   const {w,r}=times();
-  $("#warm").innerHTML=WARM.map((x,i)=>card(x,x.t,"w"+i)).join("");
+  $("#warm").innerHTML=WARM.map((x,i)=>card(x,"40s","exw"+i)).join("");
   $("#dtitle").textContent=D[day].t;
-  $("#list").innerHTML=D[day].x.map((x,i)=>card(x,x.split?`${w}s (${Math.round(w/2)}s cada lado) · ${r}s pausa`:`${w}s · ${r}s pausa`,i)).join("");
+  $("#list").innerHTML=D[day].x.map((x,i)=>card(x,x.split?`${w}s (${Math.round(w/2)}s cada lado) · ${r}s pausa`:`${w}s · ${r}s pausa`,"ex"+i)).join("");
   build();
 }
-let seq=[],idx=0,left=0,tk=null,run=false,actx=null,lock=null;
+
+/* Timer por exercício: cada bloco (exercício ou descanso) tem o próprio relógio. */
+let seq=[],idx=0,left=0,tk=null,run=false,actx=null,lock=null,confirmT=null,finished=false;
 function build(){
   const {w,r}=times();seq=[];
-  WARM.forEach((x,i)=>seq.push({k:"work",n:x.n,s:40,id:"exw"+i,lab:"Aquecimento"}));
+  WARM.forEach((x,i)=>seq.push({k:"work",n:x.n,s:40,id:"exw"+i,lab:"Aquecimento",pos:`${i+1}/3`}));
   for(let v=1;v<=3;v++)D[day].x.forEach((x,i)=>{
-    seq.push({k:"work",n:x.n,s:w,id:"ex"+i,lab:`Volta ${v}/3`});
-    if(!(v===3&&i===3))seq.push({k:"rest",n:"Descanso",s:r,lab:`Volta ${v}/3`});
+    seq.push({k:"work",n:x.n,s:w,id:"ex"+i,lab:`Volta ${v}/3`,pos:`${i+1}/4`,split:x.split});
+    if(!(v===3&&i===3))seq.push({k:"rest",n:"Descanso",s:r,lab:`Volta ${v}/3`,pos:""});
   });
-  const tot=seq.reduce((a,b)=>a+b.s,0);
-  $("#total").textContent=`Total ${Math.floor(tot/60)} min ${tot%60?tot%60+"s":""}`;
-  stop();idx=0;left=seq[0].s;show();$("#phase").textContent="Pronto";$("#phase").className="phase";$("#now").textContent="Aperte iniciar";
+  stop();idx=0;finished=false;left=seq[0].s;show();
 }
 const fmt=s=>String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0");
 function show(){
   const c=seq[idx];if(!c)return;
   $("#clock").textContent=fmt(left);
-  $("#phase").textContent=(c.k==="work"?"Trabalho · ":"Descanso · ")+c.lab;
+  $("#phase").textContent=(c.k==="work"?"Exercício · ":"Descanso · ")+c.lab;
   $("#phase").className="phase "+c.k;
-  $("#now").textContent=c.n;
+  $("#step").textContent=c.pos?`exercício ${c.pos}`:"";
+  let half="";if(c.split&&c.k==="work")half=left>Math.floor(c.s/2)?" · lado 1":" · troque de lado";
+  $("#now").textContent=c.n+half;
   const nx=seq.slice(idx+1).find(s=>s.k==="work");
-  $("#next").textContent=nx?"Próximo: "+nx.n:"Último!";
-  const done=seq.slice(0,idx).reduce((a,b)=>a+b.s,0)+(c.s-left);
-  $("#prog").style.width=(100*done/seq.reduce((a,b)=>a+b.s,0))+"%";
+  $("#next").textContent=nx?"Depois: "+nx.n:"Último exercício!";
+  $("#exbar").className="bar ex"+(c.k==="rest"?" rest":"");
+  $("#exprog").style.width=(100*(c.s-left)/c.s)+"%";
+  const tot=seq.reduce((a,b)=>a+b.s,0),done=seq.slice(0,idx).reduce((a,b)=>a+b.s,0)+(c.s-left);
+  $("#prog").style.width=(100*done/tot)+"%";
   document.querySelectorAll(".card.live").forEach(e=>e.classList.remove("live"));
-  if(c.id&&c.k==="work"){const el=document.getElementById(c.id);el&&el.classList.add("live")}
+  if(c.id){const el=document.getElementById(c.id);el&&el.classList.add("live")}
 }
 function beep(f,d){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();const o=actx.createOscillator(),g=actx.createGain();o.frequency.value=f;o.connect(g);g.connect(actx.destination);g.gain.setValueAtTime(.2,actx.currentTime);g.gain.exponentialRampToValueAtTime(.001,actx.currentTime+d);o.start();o.stop(actx.currentTime+d)}catch(e){}}
+function goTo(i,keepRunning){
+  idx=Math.max(0,Math.min(seq.length-1,i));left=seq[idx].s;finished=false;
+  if(!keepRunning)stop();
+  show();
+  const c=seq[idx];if(c.id){const el=document.getElementById(c.id);el&&el.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion:reduce)").matches?"auto":"smooth",block:"start"})}
+}
 function tick(){
   left--;
+  const c=seq[idx];
+  if(c.split&&c.k==="work"&&left===Math.floor(c.s/2))beep(770,.25);
   if(left>0&&left<=3)beep(660,.12);
-  if(left<=0){idx++;if(idx>=seq.length){finish();return}left=seq[idx].s;beep(seq[idx].k==="work"?990:440,.35)}
+  if(left<=0){
+    if(idx>=seq.length-1){finish();return}
+    const auto=$("#auto").value==="1";
+    goTo(idx+1,auto);
+    beep(seq[idx].k==="work"?990:440,.35);
+    if(!auto)$("#go").textContent="▶ Continuar";
+    return;
+  }
   show();
 }
-function start(){if(run)return;run=true;$("#go").textContent="Pausar";beep(880,.2);tk=setInterval(tick,1000);
-  try{navigator.wakeLock&&navigator.wakeLock.request("screen").then(l=>lock=l).catch(()=>{})}catch(e){}}
-function stop(){run=false;clearInterval(tk);$("#go").textContent="Iniciar";try{lock&&lock.release();lock=null}catch(e){}}
-function finish(){stop();$("#clock").textContent="FEITO";$("#phase").textContent="Concluído";$("#phase").className="phase rest";$("#now").textContent="Treino "+day+" concluído. Boa!";$("#next").textContent="";$("#prog").style.width="100%";
-  beep(990,.2);setTimeout(()=>beep(1320,.4),250);markDone()}
-function hist(){try{return JSON.parse(localStorage.getItem("tp-hist")||"[]")}catch(e){return[]}}
-function markDone(){const h=hist(),d=new Date().toISOString().slice(0,10);if(!h.includes(d))h.push(d);try{localStorage.setItem("tp-hist",JSON.stringify(h))}catch(e){}streak()}
+function start(){
+  if(run)return;
+  if(finished)build();
+  run=true;$("#go").textContent="⏸ Pausar";beep(880,.15);tk=setInterval(tick,1000);
+  try{navigator.wakeLock&&navigator.wakeLock.request("screen").then(l=>lock=l).catch(()=>{})}catch(e){}
+}
+function stop(){run=false;clearInterval(tk);$("#go").textContent=finished?"▶ De novo":"▶ Iniciar";try{lock&&lock.release();lock=null}catch(e){}}
+function finish(){
+  finished=true;stop();left=0;
+  $("#clock").textContent="FEITO";$("#phase").textContent="Concluído";$("#phase").className="phase rest";
+  $("#now").textContent="Treino "+day+" concluído. Boa!";$("#next").textContent="";$("#step").textContent="";
+  $("#prog").style.width="100%";$("#exprog").style.width="100%";
+  beep(990,.2);setTimeout(()=>beep(1320,.4),250);markDone();
+}
+function hist(){try{return JSON.parse(ls.get("tp-hist","[]"))}catch(e){return[]}}
+const iso=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+function markDone(){const h=hist(),d=iso(new Date());if(!h.includes(d))h.push(d);ls.set("tp-hist",JSON.stringify(h));streak()}
 function streak(){
   const h=hist();let out=`<span>Últimos 14 dias:</span>`;
-  for(let i=13;i>=0;i--){const dt=new Date();dt.setDate(dt.getDate()-i);const k=dt.toISOString().slice(0,10);out+=`<span class="dot ${h.includes(k)?"on":""}" title="${k}">${dt.getDate()}</span>`}
+  for(let i=13;i>=0;i--){const dt=new Date();dt.setDate(dt.getDate()-i);const k=iso(dt);out+=`<span class="dot ${h.includes(k)?"on":""}" title="${k}">${dt.getDate()}</span>`}
   out+=`<span>· ${h.length} treinos no total</span>`;$("#streak").innerHTML=out;
 }
-document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{day=b.dataset.d;try{localStorage.setItem("tp-day",day)}catch(e){}render()});
-$("#fase").onchange=()=>{try{localStorage.setItem("tp-fase",$("#fase").value)}catch(e){}render()};
-try{const f=localStorage.getItem("tp-fase");if(f)$("#fase").value=f}catch(e){}
+document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{day=b.dataset.d;ls.set("tp-day",day);render()});
+$("#fase").onchange=()=>{ls.set("tp-fase",$("#fase").value);render()};
+$("#auto").onchange=()=>ls.set("tp-auto",$("#auto").value);
 $("#go").onclick=()=>run?stop():start();
-$("#skip").onclick=()=>{if(idx<seq.length-1){idx++;left=seq[idx].s;show()}else finish()};
-$("#reset").onclick=build;
+$("#again").onclick=()=>{if(finished)return;left=seq[idx].s;show()};
+$("#skip").onclick=()=>{if(finished)return;if(idx<seq.length-1)goTo(idx+1,run);else finish()};
+$("#prev").onclick=()=>{if(finished){build();return}
+  /* se já passou mais de 3s, volta ao início deste; senão vai para o anterior */
+  if(seq[idx].s-left>3){left=seq[idx].s;show()}else goTo(idx-1,run)};
+$("#reset").onclick=()=>{
+  const b=$("#reset");
+  if(b.dataset.armed){clearTimeout(confirmT);delete b.dataset.armed;b.classList.remove("warn");b.textContent="Recomeçar treino";build();return}
+  b.dataset.armed="1";b.classList.add("warn");b.textContent="Toque de novo para zerar tudo";
+  confirmT=setTimeout(()=>{delete b.dataset.armed;b.classList.remove("warn");b.textContent="Recomeçar treino"},3000);
+};
 render();streak();
 </script>
 
